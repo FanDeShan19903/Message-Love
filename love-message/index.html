@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>The Sound Of My Heart</title>
+    <meta name="description" content="Màn hình code rain iLoveU ngọt ngào giải mã thành lời tỏ tình lãng mạn dành riêng cho Thanh Hà." />
+    <meta property="og:title" content="The Sound Of My Heart" />
+    <meta property="og:description" content="Màn hình code rain iLoveU ngọt ngào giải mã thành lời tỏ tình lãng mạn dành riêng cho Thanh Hà." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Background Code Rain Canvas -->
+    <canvas id="codeCanvas"></canvas>
+
+    <!-- Celebration Fireworks/Hearts Canvas -->
+    <canvas id="celebrationCanvas"></canvas>
+
+    <!-- Romantic Vignette Overlay -->
+    <div class="vignette" id="vignette"></div>
+
+    <!-- Hidden YouTube Player for exact video audio: https://youtu.be/pcWczkY4Ii8 -->
+    <div id="youtube-player" style="position: fixed; top: -200px; left: -200px; width: 1px; height: 1px; opacity: 0; pointer-events: none; z-index: -999;"></div>
+
+    <!-- Phone Canvas Container (Hỗ trợ dọc 9:16 và tối ưu xoay ngang trên mobile) -->
+    <main class="app-wrapper">
+      <div class="phone-screen">
+        
+        <!-- Clean Header -->
+        <header class="header">
+          <div class="header-spacing"></div>
+        </header>
+
+        <!-- Main Decryption / Story Stage -->
+        <section class="main-stage" aria-live="polite">
+          
+          <!-- Love Letter Opening Stage (Chạm vào lá thư để cùng lúc bật nhạc và chạy chữ) -->
+          <div class="letter-stage" id="letterStage">
+            <div class="letter-badge-sub">SECRET LETTER // FOR YOU</div>
+            
+            <div class="envelope-wrapper" id="envelopeBtn" role="button" tabindex="0" aria-label="Mở bức thư tình">
+              <div class="envelope" id="envelope">
+                <div class="envelope-back"></div>
+                <!-- Letter paper inside -->
+                <div class="envelope-paper" id="envelopePaper">
+                  <div class="paper-header">
+                    <span class="paper-to">To:</span>
+                    <span class="paper-name" id="paperRecipient">Thanh Hà</span>
+                    <span class="paper-emoji">🌸</span>
+                  </div>
+                  <div class="paper-lines">
+                    <div class="paper-line w-75"></div>
+                    <div class="paper-line w-50"></div>
+                  </div>
+                  <div class="paper-footer-heart">❤</div>
+                </div>
+                <!-- Front pocket of envelope -->
+                <div class="envelope-pocket"></div>
+                <!-- Top triangular flap -->
+                <div class="envelope-flap" id="envelopeFlap"></div>
+                <!-- Wax seal in the center -->
+                <div class="wax-seal" id="waxSeal">
+                  <span class="seal-heart">❤</span>
+                </div>
+              </div>
+              <div class="envelope-aura"></div>
+            </div>
+
+            <div class="letter-instruction">
+              <div class="letter-title">Có một bức thư gửi riêng cho em...</div>
+              <div class="letter-tap-cta">
+                <span class="tap-icon-bounce">💌</span>
+                <span class="tap-text">Chạm vào lá thư để mở nhé</span>
+                <span class="tap-sparkle">✨</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Decrypting Text Box (Ẩn ban đầu, xuất hiện ngay sau khi mở thư) -->
+          <div class="decrypt-box fade-out" id="decryptBox" style="display: none;">
+            <div class="text-kicker" id="textKicker">SECRET // DECRYPTING</div>
+            <div class="decrypt-text" id="decryptText">...</div>
+          </div>
+
+          <!-- Neon Heart Drawing Stage (Step 10) -->
+          <div class="heart-stage" id="heartStage">
+            <div class="heart-svg-wrapper">
+              <svg class="heart-svg" viewBox="0 0 100 90">
+                <path
+                  id="heartOutline"
+                  class="heart-outline"
+                  d="M 50,26 C 45,14 30,8 18,18 C 5,29 8,46 22,60 L 50,86 L 78,60 C 92,46 95,29 82,18 C 70,8 55,14 50,26 Z"
+                />
+              </svg>
+              <div class="heart-particles" id="heartParticles"></div>
+            </div>
+          </div>
+
+          <!-- Final Proposal Question & Action Buttons -->
+          <div class="question-box" id="questionBox">
+            <div class="question-recipient" id="questionRecipient">Thanh Hà</div>
+            <div class="question-text">Em đồng ý làm người yêu anh nhé?</div>
+            <div class="btn-group">
+              <button id="btnAccept" class="btn-primary" type="button">
+                Đồng ý ❤️
+              </button>
+              <button id="btnThink" class="btn-secondary" type="button">
+                Để em suy nghĩ 💗
+              </button>
+            </div>
+            <div class="think-response" id="thinkResponse">
+              Không sao cả ❤️<br />
+              Anh sẽ chờ câu trả lời của em.
+            </div>
+          </div>
+
+          <!-- Post-Acceptance Celebration Message -->
+          <div class="success-stage" id="successStage">
+            <div class="success-heart-icon">❤️</div>
+            <div class="success-line-1">Vậy từ hôm nay...</div>
+            <div class="success-line-2">Chúng ta cùng viết tiếp câu chuyện này nhé.</div>
+            <div class="success-tagline">THE BEGINNING OF US</div>
+            <button class="replay-btn" id="replayBtn" type="button">
+              ↺ Xem lại
+            </button>
+          </div>
+
+        </section>
+
+        <!-- Subtle Bottom Space -->
+        <footer class="footer-space">
+          <span class="footer-hint"></span>
+        </footer>
+
+      </div>
+    </main>
+
+    <!-- Main Logic Script -->
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>

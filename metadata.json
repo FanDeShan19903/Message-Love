@@ -1,0 +1,8 @@
+{
+  "name": "Digital Love Message",
+  "description": "Màn hình code rain huyền bí giải mã thành lời tỏ tình lãng mạn dành tặng người thương.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
