@@ -4,7 +4,7 @@
  * Màn hình code rain "iLoveU" tươi sáng giải mã thành lời tỏ tình
  * Dành riêng cho: THANH HÀ
  * Tối ưu âm thanh tức thì (0ms latency) & hỗ trợ hoàn hảo khi xoay ngang
- * Link YouTube: https://youtu.be/pcWczkY4Ii8 ("Nơi Này Có Anh")
+ * Link YouTube: https://youtu.be/ZzRKtUK-hlw
  * ========================================================
  */
 
@@ -14,77 +14,83 @@
 const CONFIG = {
   senderName: "TÊN ANH",
   receiverName: "Thanh Hà",
-  specialDate: "23 • 09 • 2026",
-  youtubeVideoId: "pcWczkY4Ii8", // "NƠI NÀY CÓ ANH | Instrumental"
+  specialDate: "30 • 09 • 2026",
+  youtubeVideoId: "ZzRKtUK-hlw", // Link nhạc người dùng cung cấp
 
   messages: [
     "Anh có một điều muốn nói...",
     "Anh đã suy nghĩ về điều này rất lâu...",
-    "Có một người đã khiến những ngày bình thường trở nên đặc biệt.",
+    "Có một người đã khiến những ngày bình thường trở nên đặc biệt và làm anh nhớ nhung không thôi...",
     "ANH THÍCH EM ❤️",
-    "Anh muốn được ở bên em."
+    "Anh muốn được ở bên em!!!"
   ]
 };
 
 // ========================================================
-// SCRAMBLE / DECRYPT TEXT ENGINE
+// TYPEWRITER TEXT ENGINE (HIỆU ỨNG ĐÁNH CHỮ TỐC ĐỘ VỪA PHẢI)
 // ========================================================
-const SCRAMBLE_GLYPHS = "iLoveUiLoveU0123456789!@#$%&*♥♡";
-
-function scrambleText(element, finalText, duration = 1800, kicker = "") {
+function typewriterText(element, finalText, options = {}) {
   return new Promise((resolve) => {
+    const {
+      charDelay = 60, // Tốc độ vừa phải (~60ms mỗi ký tự)
+      kicker = "",
+      pausePunctuation = true
+    } = options;
+
     const kickerEl = document.getElementById("textKicker");
     if (kickerEl) {
       kickerEl.textContent = kicker;
       kickerEl.style.display = kicker ? "block" : "none";
     }
 
-    const length = finalText.length;
-    let frame = 0;
-    const fps = 30;
-    const totalFrames = Math.max(20, Math.floor((duration / 1000) * fps));
-    const chars = finalText.split("");
-    let isCancelled = false;
+    // Tách đúng chuỗi Unicode/Emoji bằng Array.from
+    const chars = Array.from(finalText);
+    element.innerHTML = '<span class="typewriter-content"></span><span class="typewriter-cursor"></span>';
+    const contentSpan = element.querySelector(".typewriter-content");
+    const cursorSpan = element.querySelector(".typewriter-cursor");
 
-    element.innerHTML = "";
+    let currentIndex = 0;
+    let accumulatedText = "";
 
-    const interval = setInterval(() => {
-      if (isCancelled) {
-        clearInterval(interval);
+    function typeNextChar() {
+      if (currentIndex >= chars.length) {
+        resolve();
         return;
       }
 
-      frame++;
-      const progress = frame / totalFrames;
-      const lockedCount = Math.floor(progress * length);
+      const char = chars[currentIndex];
+      currentIndex++;
 
-      let html = "";
-      for (let i = 0; i < length; i++) {
-        const targetChar = chars[i];
+      if (char === "\n") {
+        accumulatedText += "<br/>";
+      } else {
+        accumulatedText += escapeHtml(char);
+      }
 
-        if (targetChar === " " || targetChar === "\n") {
-          html += targetChar === "\n" ? "<br/>" : " ";
-          continue;
-        }
+      if (contentSpan) {
+        contentSpan.innerHTML = accumulatedText;
+      }
 
-        if (i < lockedCount) {
-          html += `<span class="char-locked">${escapeHtml(targetChar)}</span>`;
-        } else {
-          const randomChar = SCRAMBLE_GLYPHS[Math.floor(Math.random() * SCRAMBLE_GLYPHS.length)];
-          html += `<span class="char-scrambling">${escapeHtml(randomChar)}</span>`;
+      // Nhịp gõ chữ mượt mà, dừng tự nhiên ở dấu phẩy và chấm câu
+      let delay = charDelay;
+      if (char === " ") {
+        delay = Math.round(charDelay * 0.7);
+      } else if (pausePunctuation) {
+        if (char === "," || char === ";") {
+          delay = Math.round(charDelay * 2.8); // Dừng nhẹ ~170ms
+        } else if (char === "." || char === "!" || char === "?") {
+          if (currentIndex < chars.length && chars[currentIndex] === ".") {
+            delay = Math.round(charDelay * 1.1);
+          } else {
+            delay = Math.round(charDelay * 3.8); // Dừng cuối câu ~230ms
+          }
         }
       }
 
-      element.innerHTML = html;
+      setTimeout(typeNextChar, delay);
+    }
 
-      if (frame >= totalFrames) {
-        clearInterval(interval);
-        element.innerHTML = chars
-          .map((c) => (c === "\n" ? "<br/>" : escapeHtml(c)))
-          .join("");
-        resolve();
-      }
-    }, 1000 / fps);
+    setTimeout(typeNextChar, 100);
   });
 }
 
@@ -101,21 +107,19 @@ function sleep(ms) {
 
 // ========================================================
 // BACKGROUND CODE RAIN ("iLoveU" CANVAS SYSTEM)
-// Tối ưu xoay ngang và giữ mật độ chữ dày đặc, rơi nhẹ nhàng
+// Mật độ dày đặc bao phủ toàn màn hình, tốc độ rơi chậm dịu dàng
 // ========================================================
 class CodeRain {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
-    this.phrase = "iLoveU";
+    this.phrase = "iLoveU♥";
     this.phraseChars = this.phrase.split("");
-    this.fontSize = 12;
+    this.fontSize = 8.5;
+    this.colWidth = 14;
+    this.rowHeight = 12;
     this.columns = 0;
-    this.drops1 = [];
-    this.drops2 = [];
-    this.colOffsets1 = [];
-    this.colOffsets2 = [];
-    this.baseSpeed = 0.52;
+    this.streams = [];
     this.speedMultiplier = 1;
     this.isRunning = true;
     this.isSparkleMode = false;
@@ -131,20 +135,36 @@ class CodeRain {
   resize() {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
-    this.columns = Math.max(12, Math.floor(this.canvas.width / this.fontSize));
+    this.columns = Math.max(16, Math.floor(this.canvas.width / this.colWidth));
+    const totalRows = Math.ceil(this.canvas.height / this.rowHeight);
     
-    // Khởi tạo luồng rơi đảm bảo bao phủ đầy đủ chiều ngang (kể cả khi xoay ngang)
-    this.drops1 = [];
-    this.drops2 = [];
-    this.colOffsets1 = [];
-    this.colOffsets2 = [];
+    // Giảm mật độ để tạo khoảng cách thanh thoát tựa như mưa sao băng
+    // Thay vì 3 luồng mỗi cột, trung bình chỉ khoảng 1.1 luồng/cột với độ cao ngẫu nhiên
+    this.streams = [];
 
-    for (let i = 0; i < this.columns; i++) {
-      this.drops1[i] = Math.floor(Math.random() * -60);
-      this.colOffsets1[i] = Math.floor(Math.random() * this.phraseChars.length);
-
-      this.drops2[i] = Math.floor(Math.random() * -90) - 30;
-      this.colOffsets2[i] = Math.floor(Math.random() * this.phraseChars.length);
+    for (let c = 0; c < this.columns; c++) {
+      // 75% cột có 1 vệt sao băng, một số cột thưa thoáng tạo cảm giác trời đêm sao băng rơi
+      if (Math.random() < 0.78) {
+        const initialY = Math.random() * totalRows - 10;
+        this.streams.push({
+          col: c,
+          y: initialY,
+          speed: 0.48 + Math.random() * 0.32,
+          trailLength: 6 + Math.floor(Math.random() * 9), // Đuôi sao băng từ 6 - 14 ký tự
+          offset: Math.floor(Math.random() * this.phraseChars.length)
+        });
+      }
+      // Thi thoảng một vệt sao băng thứ hai rơi đuổi theo
+      if (Math.random() < 0.28) {
+        const initialY = Math.random() * totalRows - 30;
+        this.streams.push({
+          col: c,
+          y: initialY,
+          speed: 0.52 + Math.random() * 0.35,
+          trailLength: 7 + Math.floor(Math.random() * 8),
+          offset: Math.floor(Math.random() * this.phraseChars.length)
+        });
+      }
     }
   }
 
@@ -170,55 +190,64 @@ class CodeRain {
   }
 
   draw() {
+    // Xóa nền với hiệu ứng vệt mờ sao băng (motion blur lấp lánh)
     if (this.isHeartPhase) {
-      this.ctx.fillStyle = "rgba(255, 245, 248, 0.18)";
+      this.ctx.fillStyle = "rgba(255, 245, 248, 0.22)";
     } else {
       this.ctx.fillStyle = this.isSparkleMode
-        ? "rgba(255, 240, 245, 0.22)"
-        : "rgba(255, 240, 245, 0.15)";
+        ? "rgba(255, 240, 245, 0.26)"
+        : "rgba(255, 242, 246, 0.22)";
     }
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.font = `600 ${this.fontSize}px 'JetBrains Mono', monospace`;
 
-    const stepSpeed = (this.isSparkleMode ? 0.25 : this.baseSpeed) * this.speedMultiplier;
+    for (let i = 0; i < this.streams.length; i++) {
+      const stream = this.streams[i];
+      const x = stream.col * this.colWidth;
+      const headY = stream.y;
+      const trail = stream.trailLength;
 
-    this.renderStream(this.drops1, this.colOffsets1, stepSpeed, 0.93);
-    this.renderStream(this.drops2, this.colOffsets2, stepSpeed, 0.95);
-  }
+      // Vẽ vệt đuôi sao băng: Đầu sao băng phát sáng rực rỡ, đuôi vệt sao tan biến dần
+      for (let t = 0; t < trail; t++) {
+        const charRow = Math.floor(headY - t);
+        const y = charRow * this.rowHeight;
 
-  renderStream(drops, offsets, speed, leadProb) {
-    for (let i = 0; i < this.columns; i++) {
-      const dropY = Math.floor(drops[i]);
-      const x = i * this.fontSize;
-      const y = dropY * this.fontSize;
+        if (y >= 0 && y <= this.canvas.height + this.rowHeight) {
+          const charIndex = Math.abs(charRow + stream.offset + 1000) % this.phraseChars.length;
+          const char = this.phraseChars[charIndex];
 
-      if (y >= 0 && y <= this.canvas.height + this.fontSize * 2) {
-        const charIndex = Math.abs(dropY + (offsets[i] || 0)) % this.phraseChars.length;
-        const char = this.phraseChars[charIndex];
-
-        if (this.isSparkleMode) {
-          this.ctx.fillStyle = Math.random() > 0.8 ? "#be123c" : "rgba(236, 72, 153, 0.55)";
-        } else if (this.isHeartPhase) {
-          this.ctx.fillStyle = Math.random() > 0.9 ? "#be123c" : "rgba(244, 114, 182, 0.45)";
-        } else {
-          const isLead = Math.random() > leadProb;
-          if (isLead) {
-            this.ctx.fillStyle = "#be123c";
+          if (this.isSparkleMode) {
+            this.ctx.fillStyle = t === 0 ? "#be123c" : `rgba(236, 72, 153, ${(1 - t / trail) * 0.7})`;
+          } else if (this.isHeartPhase) {
+            this.ctx.fillStyle = t === 0 ? "#be123c" : `rgba(244, 114, 182, ${(1 - t / trail) * 0.6})`;
           } else {
-            this.ctx.fillStyle = "rgba(219, 39, 119, 0.72)";
+            if (t === 0) {
+              // Đầu sao băng: Hồng Ruby đậm nét rực sáng
+              this.ctx.fillStyle = "#9f1239";
+            } else if (t === 1) {
+              this.ctx.fillStyle = "#e11d48";
+            } else {
+              // Đuôi sao băng vuốt mờ thanh mảnh
+              const alpha = Math.max(0.04, Math.pow(1 - t / trail, 1.4) * 0.75);
+              this.ctx.fillStyle = `rgba(225, 29, 72, ${alpha})`;
+            }
           }
+
+          this.ctx.fillText(char, x, y);
         }
-
-        this.ctx.fillText(char, x, y);
       }
 
-      if (y > this.canvas.height && Math.random() > 0.975) {
-        drops[i] = Math.floor(Math.random() * -20);
-        offsets[i] = (offsets[i] + 1) % this.phraseChars.length;
-      }
+      // Tốc độ lướt sao băng theo frame
+      stream.y += stream.speed * this.speedMultiplier;
 
-      drops[i] += speed;
+      // Khi vệt sao băng bay qua khỏi màn hình, hồi sinh lại trên đỉnh với độ trễ ngẫu nhiên
+      if ((stream.y - trail) * this.rowHeight > this.canvas.height) {
+        stream.y = -Math.floor(Math.random() * 25) - 4;
+        stream.trailLength = 6 + Math.floor(Math.random() * 9);
+        stream.speed = 0.48 + Math.random() * 0.32;
+        stream.offset = (stream.offset + 1) % this.phraseChars.length;
+      }
     }
   }
 }
@@ -361,7 +390,7 @@ class CelebrationSystem {
 // Sẵn sàng kích hoạt 0ms ngay khi mở lá thư tình
 // ========================================================
 class YouTubeAudioManager {
-  constructor(videoId = "pcWczkY4Ii8") {
+  constructor(videoId = "ZzRKtUK-hlw") {
     this.videoId = videoId;
     this.player = null;
     this.isReady = false;
@@ -708,8 +737,8 @@ class StorySequence {
       this.audioManager.play();
     }
 
-    // 2. Chuyển mưa chữ sang nhịp điệu tình yêu sinh động
-    this.codeRain.setSpeed(1.1);
+    // 2. Chuyển mưa chữ sang nhịp điệu tình yêu êm đềm
+    this.codeRain.setSpeed(1.0);
 
     // 3. Hiệu ứng mở lá thư: Nắp phong bì mở ra, lá thư trượt lên
     if (this.envelope) {
@@ -729,86 +758,89 @@ class StorySequence {
       this.letterStage.style.display = "none";
     }
 
-    // 5. CÙNG LÚC: Bắt đầu chạy chữ giải mã lời tỏ tình!
+    // 5. CÙNG LÚC: Bắt đầu chạy hiệu ứng đánh chữ lời nhắn!
     this.decryptBox.style.display = "flex";
     this.run();
   }
 
   async run() {
-    await sleep(400);
+    await sleep(350);
     this.decryptText.className = "decrypt-text";
     this.setBoxVisibility(true);
 
-    // Ký tự xáo trộn khởi động "iLoveU"
-    await scrambleText(
-      this.decryptText,
-      "iLoveU  iLoveU  iLoveU",
-      1200,
-      "SECRET // DECRYPTING"
+    // Mở đầu đánh chữ gửi đến người ấy với tốc độ vừa phải (~60ms)
+    await this.transitionText(
+      `Gửi em, ${CONFIG.receiverName || "Thanh Hà"}... 🌸`,
+      "A LETTER FOR YOU",
+      1600,
+      true,
+      62
     );
-    await sleep(800);
 
     // STEP 1: "Anh có một điều muốn nói..."
     await this.transitionText(
       CONFIG.messages[0] || "Anh có một điều muốn nói...",
-      1600,
       "",
-      2000
+      1800,
+      true,
+      58
     );
 
     // STEP 2: "Anh đã suy nghĩ về điều này rất lâu..."
     await this.transitionText(
       CONFIG.messages[1] || "Anh đã suy nghĩ về điều này rất lâu...",
-      1800,
       "",
-      2200
+      2000,
+      true,
+      56
     );
 
-    // STEP 3: "Có một người đã khiến những ngày bình thường trở nên đặc biệt."
+    // STEP 3: "Có một người đã khiến những ngày bình thường trở nên đặc biệt và làm anh nhớ nhung không thôi..."
     await this.transitionText(
-      CONFIG.messages[2] || "Có một người đã khiến những ngày bình thường trở nên đặc biệt.",
-      2000,
+      CONFIG.messages[2] || "Có một người đã khiến những ngày bình thường trở nên đặc biệt và làm anh nhớ nhung không thôi...",
       "",
-      2400
+      2200,
+      true,
+      52
     );
 
     // STEP 4: Tên người nhận [THANH HÀ] - Chữ lớn ở giữa màn hình
     this.decryptText.className = "decrypt-text large-name";
     await this.transitionText(
       CONFIG.receiverName || "Thanh Hà",
-      1600,
       "FOR YOU",
       2400,
-      false
+      false,
+      75
     );
     this.decryptText.className = "decrypt-text";
 
-    // STEP 5: Ngày đặc biệt "23 • 09 • 2026"
+    // STEP 5: Ngày đặc biệt "30 • 09 • 2026"
     this.decryptText.className = "decrypt-text special-date";
     await this.transitionText(
-      CONFIG.specialDate || "23 • 09 • 2026",
-      1500,
+      CONFIG.specialDate || "30 • 09 • 2026",
       "SPECIAL MOMENT",
       2400,
-      false
+      false,
+      70
     );
     this.decryptText.className = "decrypt-text";
 
-    // STEP 6: "Và hôm nay..." -> "Anh muốn nói với em một điều."
-    await this.transitionText("Và hôm nay...", 1400, "", 1600);
-    await this.transitionText("Anh muốn nói với em một điều.", 1600, "", 2000);
+    // STEP 6: "Và hôm nay..." -> "Anh muốn nói với em một điều..."
+    await this.transitionText("Và hôm nay...", "", 1500, true, 65);
+    await this.transitionText("Anh muốn nói với em một điều...", "", 1800, true, 58);
 
     // STEP 7: Màn hình chuyển tone hồng ấm rực rỡ, mưa chữ iLoveU nhẹ nhàng tăng tốc, hiện "ANH THÍCH EM ❤️"
     this.vignette.classList.add("darker");
-    this.codeRain.setSpeed(1.4);
+    this.codeRain.setSpeed(1.2);
 
     this.decryptText.className = "decrypt-text huge-confession";
     await this.transitionText(
       CONFIG.messages[3] || "ANH THÍCH EM ❤️",
-      2000,
       "CONFESSION",
-      3000,
-      false
+      2800,
+      false,
+      72
     );
     this.decryptText.className = "decrypt-text";
 
@@ -817,15 +849,16 @@ class StorySequence {
     this.vignette.classList.remove("darker");
 
     // STEP 8: "Anh không biết em sẽ trả lời thế nào..." -> "Nhưng anh vẫn muốn nói."
-    await this.transitionText("Anh không biết em sẽ trả lời thế nào...", 1800, "", 2000);
-    await this.transitionText("Nhưng anh vẫn muốn nói.", 1500, "", 2000);
+    await this.transitionText("Anh không biết em sẽ trả lời thế nào...", "", 1800, true, 56);
+    await this.transitionText("Nhưng anh vẫn muốn nói...", "", 1800, true, 56);
 
     // STEP 9: "Anh muốn được ở bên em."
     await this.transitionText(
-      CONFIG.messages[4] || "Anh muốn được ở bên em.",
-      1800,
-      "",
-      2400
+      CONFIG.messages[4] || "Anh muốn được ở bên em❤️",
+      "FROM MY HEART",
+      2200,
+      true,
+      60
     );
 
     // STEP 10: Chuyển sang không gian hoa hồng pastel sáng lung linh. Trái tim neon xuất hiện
@@ -838,9 +871,9 @@ class StorySequence {
     this.showNeonHeart();
   }
 
-  async transitionText(text, duration, kicker = "", holdTime = 2000, resetClass = true) {
+  async transitionText(text, kicker = "", holdTime = 2000, resetClass = true, charDelay = 58) {
     this.setBoxVisibility(true);
-    await scrambleText(this.decryptText, text, duration, kicker);
+    await typewriterText(this.decryptText, text, { kicker, charDelay });
     await sleep(holdTime);
     await this.setBoxVisibility(false);
     await sleep(400);
@@ -870,10 +903,26 @@ class StorySequence {
     this.heartOutline.classList.remove("filled");
     this.heartOutline.classList.add("drawn");
 
+    const heartFill = document.getElementById("heartFill");
+    const heartSvgWrapper = document.getElementById("heartSvgWrapper");
+
+    if (heartFill) {
+      heartFill.classList.remove("filled");
+    }
+    if (heartSvgWrapper) {
+      heartSvgWrapper.classList.remove("pulsing");
+    }
+
     this.createHeartSparkles();
 
     setTimeout(() => {
       this.heartOutline.classList.add("filled");
+      if (heartFill) {
+        heartFill.classList.add("filled");
+      }
+      if (heartSvgWrapper) {
+        heartSvgWrapper.classList.add("pulsing");
+      }
       this.showFinalQuestion();
     }, 2200);
   }
@@ -883,22 +932,48 @@ class StorySequence {
     if (!container) return;
     container.innerHTML = "";
 
-    const sparkleCount = 14;
-    for (let i = 0; i < sparkleCount; i++) {
-      const dot = document.createElement("div");
-      dot.className = "sparkle-dot";
+    const items = [
+      { type: "star", delay: 0 },
+      { type: "dot", delay: 0.15 },
+      { type: "micro-heart", delay: 0.3 },
+      { type: "star", delay: 0.5 },
+      { type: "dot", delay: 0.7 },
+      { type: "star", delay: 0.9 },
+      { type: "dot", delay: 1.1 },
+      { type: "micro-heart", delay: 1.3 },
+      { type: "star", delay: 1.5 },
+      { type: "dot", delay: 1.7 },
+      { type: "star", delay: 1.9 },
+      { type: "dot", delay: 2.1 },
+      { type: "micro-heart", delay: 2.3 },
+      { type: "star", delay: 2.5 },
+      { type: "dot", delay: 2.7 },
+      { type: "star", delay: 2.9 }
+    ];
 
-      const angle = (i / sparkleCount) * Math.PI * 2;
-      const distance = Math.random() * 45 + 35;
+    items.forEach((item, i) => {
+      const el = document.createElement("div");
+      const angle = (i / items.length) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
+      const distance = Math.random() * 55 + 40;
       const tx = `${Math.cos(angle) * distance}px`;
       const ty = `${Math.sin(angle) * distance}px`;
 
-      dot.style.setProperty("--tx", tx);
-      dot.style.setProperty("--ty", ty);
-      dot.style.animationDelay = `${Math.random() * 1.5}s`;
+      el.style.setProperty("--tx", tx);
+      el.style.setProperty("--ty", ty);
+      el.style.animationDelay = `${item.delay}s`;
 
-      container.appendChild(dot);
-    }
+      if (item.type === "star") {
+        el.className = "sparkle-star";
+        el.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12,2 L14,9 L21,12 L14,15 L12,22 L10,15 L3,12 L10,9 Z"/></svg>';
+      } else if (item.type === "micro-heart") {
+        el.className = "sparkle-mini-heart";
+        el.textContent = "❤";
+      } else {
+        el.className = "sparkle-dot";
+      }
+
+      container.appendChild(el);
+    });
   }
 
   showFinalQuestion() {

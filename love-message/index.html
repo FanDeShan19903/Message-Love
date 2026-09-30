@@ -21,7 +21,7 @@
     <!-- Romantic Vignette Overlay -->
     <div class="vignette" id="vignette"></div>
 
-    <!-- Hidden YouTube Player for exact video audio: https://youtu.be/pcWczkY4Ii8 -->
+    <!-- Hidden YouTube Player for exact video audio: https://youtu.be/ZzRKtUK-hlw -->
     <div id="youtube-player" style="position: fixed; top: -200px; left: -200px; width: 1px; height: 1px; opacity: 0; pointer-events: none; z-index: -999;"></div>
 
     <!-- Phone Canvas Container (Hỗ trợ dọc 9:16 và tối ưu xoay ngang trên mobile) -->
@@ -78,22 +78,93 @@
             </div>
           </div>
 
-          <!-- Decrypting Text Box (Ẩn ban đầu, xuất hiện ngay sau khi mở thư) -->
+          <!-- Typewriter Text Box (Ẩn ban đầu, xuất hiện ngay sau khi mở thư) -->
           <div class="decrypt-box fade-out" id="decryptBox" style="display: none;">
-            <div class="text-kicker" id="textKicker">SECRET // DECRYPTING</div>
-            <div class="decrypt-text" id="decryptText">...</div>
+            <div class="text-kicker" id="textKicker" style="display: none;"></div>
+            <div class="decrypt-text" id="decryptText"></div>
           </div>
 
           <!-- Neon Heart Drawing Stage (Step 10) -->
           <div class="heart-stage" id="heartStage">
-            <div class="heart-svg-wrapper">
-              <svg class="heart-svg" viewBox="0 0 100 90">
+            <div class="heart-svg-wrapper" id="heartSvgWrapper">
+              <!-- Radial backlight aura -->
+              <div class="heart-ambient-glow"></div>
+
+              <!-- Animated pulse ripple rings -->
+              <div class="heartbeat-pulse-ring ring-1"></div>
+              <div class="heartbeat-pulse-ring ring-2"></div>
+
+              <svg class="heart-svg" viewBox="0 0 100 92">
+                <defs>
+                  <!-- Vibrant neon stroke gradient -->
+                  <linearGradient id="heartStrokeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#fda4af" />
+                    <stop offset="25%" stop-color="#fb7185" />
+                    <stop offset="60%" stop-color="#f43f5e" />
+                    <stop offset="85%" stop-color="#e11d48" />
+                    <stop offset="100%" stop-color="#be123c" />
+                  </linearGradient>
+
+                  <!-- Crystal gem inner radial gradient -->
+                  <radialGradient id="heartCoreGrad" cx="42%" cy="36%" r="68%">
+                    <stop offset="0%" stop-color="#ffe4e6" stop-opacity="0.95" />
+                    <stop offset="22%" stop-color="#fda4af" stop-opacity="0.9" />
+                    <stop offset="55%" stop-color="#f43f5e" stop-opacity="0.8" />
+                    <stop offset="85%" stop-color="#be123c" stop-opacity="0.85" />
+                    <stop offset="100%" stop-color="#881337" stop-opacity="0.95" />
+                  </radialGradient>
+
+                  <!-- Specular glass reflection gradient -->
+                  <linearGradient id="heartGlassSpec" x1="20%" y1="10%" x2="45%" y2="70%">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85" />
+                    <stop offset="40%" stop-color="#ffffff" stop-opacity="0.4" />
+                    <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+                  </linearGradient>
+
+                  <!-- Multi-layered neon glow filter -->
+                  <filter id="heartGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blurSmall" />
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="6.5" result="blurMed" />
+                    <feMerge>
+                      <feMergeNode in="blurMed" />
+                      <feMergeNode in="blurSmall" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                <!-- Soft blurred shadow aura -->
+                <path
+                  class="heart-shadow-layer"
+                  d="M 50,28 C 48,15 32,7 18,17 C 4,27 6,46 22,63 C 32,74 44,83 50,88 C 56,83 68,74 78,63 C 94,46 96,27 82,17 C 68,7 52,15 50,28 Z"
+                />
+
+                <!-- Luminous crystal heart body (Fades in smoothly) -->
+                <path
+                  id="heartFill"
+                  class="heart-fill-body"
+                  d="M 50,28 C 48,15 32,7 18,17 C 4,27 6,46 22,63 C 32,74 44,83 50,88 C 56,83 68,74 78,63 C 94,46 96,27 82,17 C 68,7 52,15 50,28 Z"
+                  fill="url(#heartCoreGrad)"
+                />
+
+                <!-- Glass / crystal specular highlight on top lobe -->
+                <path
+                  class="heart-glass-highlight"
+                  d="M 23,21 C 14,27 15,39 24,51 C 27,45 24,33 33,25 C 38,20 44,21 47,24 C 44,18 32,15 23,21 Z"
+                  fill="url(#heartGlassSpec)"
+                />
+
+                <!-- Animated Neon Outline -->
                 <path
                   id="heartOutline"
                   class="heart-outline"
-                  d="M 50,26 C 45,14 30,8 18,18 C 5,29 8,46 22,60 L 50,86 L 78,60 C 92,46 95,29 82,18 C 70,8 55,14 50,26 Z"
+                  d="M 50,28 C 48,15 32,7 18,17 C 4,27 6,46 22,63 C 32,74 44,83 50,88 C 56,83 68,74 78,63 C 94,46 96,27 82,17 C 68,7 52,15 50,28 Z"
+                  stroke="url(#heartStrokeGrad)"
+                  filter="url(#heartGlowFilter)"
                 />
               </svg>
+
+              <!-- Particle constellation (magical stars, glowing dots, floating micro-hearts) -->
               <div class="heart-particles" id="heartParticles"></div>
             </div>
           </div>
